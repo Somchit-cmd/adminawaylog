@@ -35,18 +35,24 @@ const AdminDashboard = () => {
   } = useQuery({
     queryKey: ['reports'],
     queryFn: getReports,
-    onSuccess: (data) => {
-      // Ensure all reports have an id (fallback to empty string if undefined)
-      const reportsWithId = data.map(report => ({
-        ...report,
-        id: report.id || `temp-${Date.now()}-${Math.random()}`
-      })) as Report[];
-      
-      setFilteredReports(reportsWithId);
-    },
-    onError: (error: any) => {
-      console.error("Error fetching reports:", error);
-      toast.error("Failed to load reports");
+    meta: {
+      onSettled: (data: ReportData[] | undefined, error: any) => {
+        if (error) {
+          console.error("Error fetching reports:", error);
+          toast.error("Failed to load reports");
+          return;
+        }
+        
+        if (data) {
+          // Ensure all reports have an id (fallback to empty string if undefined)
+          const reportsWithId = data.map(report => ({
+            ...report,
+            id: report.id || `temp-${Date.now()}-${Math.random()}`
+          })) as Report[];
+          
+          setFilteredReports(reportsWithId);
+        }
+      }
     }
   });
 
