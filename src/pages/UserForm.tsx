@@ -28,6 +28,7 @@ const UserForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
+  const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const isMobile = useIsMobile();
   
   const {
@@ -51,11 +52,11 @@ const UserForm = () => {
     setIsSubmitting(true);
 
     try {
-      // Save the report to Firebase with the actual photo file
+      // Save the report to Firebase with the photo and base64 string
       const reportId = await saveReportWithPhoto({
         ...data,
         location,
-      }, photo);
+      }, photo, photoBase64 || undefined);
 
       toast.success("Report submitted successfully!");
       
@@ -63,6 +64,7 @@ const UserForm = () => {
       reset();
       setLocation(null);
       setPhoto(null);
+      setPhotoBase64(null);
       
       // Navigate home after submission
       setTimeout(() => {
@@ -164,7 +166,10 @@ const UserForm = () => {
 
               <div className="grid gap-3">
                 <Label>Evidence Photo</Label>
-                <PhotoUpload onPhotoCapture={(file) => setPhoto(file)} />
+                <PhotoUpload onPhotoCapture={(file, base64) => {
+                  setPhoto(file);
+                  setPhotoBase64(base64);
+                }} />
               </div>
 
               <div className="grid gap-3">

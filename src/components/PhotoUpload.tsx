@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface PhotoUploadProps {
-  onPhotoCapture: (file: File) => void;
+  onPhotoCapture: (file: File, base64: string) => void;
 }
 
 const PhotoUpload: React.FC<PhotoUploadProps> = ({ onPhotoCapture }) => {
@@ -29,13 +29,13 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onPhotoCapture }) => {
       toast.error("Only image files are allowed.");
       return;
     }
-
-    onPhotoCapture(file);
     
-    // Create preview
+    // Create preview and convert to base64
     const reader = new FileReader();
     reader.onloadend = () => {
-      setPreview(reader.result as string);
+      const base64String = reader.result as string;
+      setPreview(base64String);
+      onPhotoCapture(file, base64String);
     };
     reader.readAsDataURL(file);
   };
