@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import LocationPicker from "@/components/LocationPicker";
 import PhotoUpload from "@/components/PhotoUpload";
 import { saveReport } from "@/utils/firebase";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FormValues {
   userName: string;
@@ -27,6 +28,7 @@ const UserForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
+  const isMobile = useIsMobile();
   
   const {
     register,
@@ -118,14 +120,14 @@ const UserForm = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className={isMobile ? "grid gap-4" : "grid grid-cols-2 gap-4"}>
                 <div className="grid gap-3">
-                  <Label htmlFor="timeOut">Time Out</Label>
+                  <Label htmlFor="timeOut">Start Time</Label>
                   <Input
                     id="timeOut"
                     type="datetime-local"
                     className="form-input"
-                    {...register("timeOut", { required: "Time out is required" })}
+                    {...register("timeOut", { required: "Start time is required" })}
                   />
                   {errors.timeOut && (
                     <p className="text-sm text-destructive">{errors.timeOut.message}</p>
@@ -133,12 +135,12 @@ const UserForm = () => {
                 </div>
 
                 <div className="grid gap-3">
-                  <Label htmlFor="timeIn">Time In</Label>
+                  <Label htmlFor="timeIn">Return Time</Label>
                   <Input
                     id="timeIn"
                     type="datetime-local"
                     className="form-input"
-                    {...register("timeIn", { required: "Time in is required" })}
+                    {...register("timeIn", { required: "Return time is required" })}
                   />
                   {errors.timeIn && (
                     <p className="text-sm text-destructive">{errors.timeIn.message}</p>
