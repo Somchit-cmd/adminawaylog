@@ -23,7 +23,7 @@ export const storage = getStorage(app);
 
 // Type definition for the report data
 export interface ReportData {
-  id?: string;
+  id?: string; // Optional since it's assigned by Firestore
   userName: string;
   purpose: string;
   timeOut: string;
@@ -32,7 +32,8 @@ export interface ReportData {
   notes?: string;
   photoUrl?: string;
   location?: { lat: number; lng: number };
-  timestamp?: string;
+  timestamp?: string; // ISO string date
+  createdAt?: Timestamp; // Firestore timestamp
 }
 
 // Function to upload an image to Firebase Storage
@@ -105,7 +106,7 @@ export const getReports = async (): Promise<ReportData[]> => {
         notes: data.notes,
         photoUrl: data.photoUrl,
         location: data.location,
-        timestamp: data.createdAt.toDate().toISOString()
+        timestamp: data.createdAt?.toDate()?.toISOString() || new Date().toISOString()
       };
     });
     

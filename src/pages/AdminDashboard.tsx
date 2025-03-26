@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -15,21 +16,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReportCard from "@/components/ReportCard";
-import { getReports } from "@/utils/firebase";
+import { getReports, ReportData } from "@/utils/firebase";
 import { useQuery } from "@tanstack/react-query";
 
-interface Report {
-  id: string;
-  userName: string;
-  purpose: string;
-  timeOut: string;
-  timeIn: string;
-  vehicle: string;
-  photoUrl: string;
-  location: { lat: number; lng: number };
-  notes?: string;
-  timestamp: string;
-}
+// Update the Report interface to match ReportData but make id required
+type Report = Required<Pick<ReportData, 'id'>> & Omit<ReportData, 'id'>;
 
 const AdminDashboard = () => {
   const [filteredReports, setFilteredReports] = useState<Report[]>([]);
@@ -44,14 +35,31 @@ const AdminDashboard = () => {
   } = useQuery({
     queryKey: ['reports'],
     queryFn: getReports,
-    onError: (error) => {
+    onSuccess: (data) => {
+      // Ensure all reports have an id (fallback to empty string if undefined)
+      const reportsWithId = data.map(report => ({
+        ...report,
+        id: report.id || `temp-${Date.now()}-${Math.random()}`
+      })) as Report[];
+      
+      setFilteredReports(reportsWithId);
+    },
+    onError: (error: any) => {
       console.error("Error fetching reports:", error);
       toast.error("Failed to load reports");
     }
   });
 
   useEffect(() => {
-    let results = reports;
+    if (!reports) return;
+    
+    // Ensure all reports have an id
+    const reportsWithId = reports.map(report => ({
+      ...report,
+      id: report.id || `temp-${Date.now()}-${Math.random()}`
+    })) as Report[];
+    
+    let results = reportsWithId;
 
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
@@ -118,10 +126,10 @@ const AdminDashboard = () => {
   };
 
   const analytics = {
-    totalReports: reports.length,
-    mostCommonPurpose: getMostCommon(reports, 'purpose'),
-    mostActiveUser: getMostCommon(reports, 'userName'),
-    averageTimeOut: getAverageTimeOut(reports)
+    totalReports: filteredReports.length,
+    mostCommonPurpose: getMostCommon(filteredReports, 'purpose'),
+    mostActiveUser: getMostCommon(filteredReports, 'userName'),
+    averageTimeOut: getAverageTimeOut(filteredReports)
   };
 
   function getMostCommon(items: any[], key: string): string {

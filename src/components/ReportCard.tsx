@@ -2,19 +2,10 @@
 import React from "react";
 import { Clock, MapPin, Car, FileText } from "lucide-react";
 import { formatDistance } from "date-fns";
+import { ReportData } from "@/utils/firebase";
 
-interface Report {
-  id: string;
-  userName: string;
-  purpose: string;
-  timeOut: string;
-  timeIn: string;
-  vehicle: string;
-  photoUrl: string;
-  location: { lat: number; lng: number };
-  notes?: string;
-  timestamp: string;
-}
+// Use the ReportData from firebase but make id required
+type Report = Required<Pick<ReportData, 'id'>> & Omit<ReportData, 'id'>;
 
 interface ReportCardProps {
   report: Report;
