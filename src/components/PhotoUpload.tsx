@@ -1,8 +1,9 @@
 
 import React, { useState, useRef } from "react";
-import { Camera, Upload, X } from "lucide-react";
+import { Camera, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface PhotoUploadProps {
   onPhotoCapture: (file: File) => void;
@@ -11,6 +12,7 @@ interface PhotoUploadProps {
 const PhotoUpload: React.FC<PhotoUploadProps> = ({ onPhotoCapture }) => {
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,7 +52,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onPhotoCapture }) => {
       <input
         type="file"
         accept="image/*"
-        capture="environment"
+        capture={isMobile ? "environment" : undefined}
         onChange={handleFileChange}
         className="hidden"
         ref={fileInputRef}
@@ -69,15 +71,17 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onPhotoCapture }) => {
               Take Photo
             </Button>
             
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex-1 flex items-center justify-center gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              Upload
-            </Button>
+            {!isMobile && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 flex items-center justify-center gap-2"
+              >
+                <Camera className="h-4 w-4" />
+                Upload Photo
+              </Button>
+            )}
           </div>
         ) : (
           <div className="relative">
