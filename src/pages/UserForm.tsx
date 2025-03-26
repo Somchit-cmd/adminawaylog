@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import LocationPicker from "@/components/LocationPicker";
 import PhotoUpload from "@/components/PhotoUpload";
-import { saveReport } from "@/utils/firebase";
+import { saveReportWithPhoto } from "@/utils/firebase";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FormValues {
@@ -34,6 +34,7 @@ const UserForm = () => {
     register,
     handleSubmit,
     formState: { errors },
+    reset
   } = useForm<FormValues>();
 
   const onSubmit = async (data: FormValues) => {
@@ -43,25 +44,25 @@ const UserForm = () => {
     }
 
     if (!photo) {
-      toast.error("Please take or upload a photo as evidence");
+      toast.error("Please take a photo as evidence");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // In a real app, we would upload the photo to Firebase Storage
-      // and get the URL. For demo purposes, we'll create a local URL
-      const photoUrl = URL.createObjectURL(photo);
-
-      // Save the report to Firebase (mocked in our implementation)
-      await saveReport({
+      // Save the report to Firebase with the actual photo file
+      const reportId = await saveReportWithPhoto({
         ...data,
         location,
-        photoUrl, // This would be the uploaded file URL in a real app
-      });
+      }, photo);
 
       toast.success("Report submitted successfully!");
+      
+      // Reset form after successful submission
+      reset();
+      setLocation(null);
+      setPhoto(null);
       
       // Navigate home after submission
       setTimeout(() => {

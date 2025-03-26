@@ -1,14 +1,11 @@
 
-// This is a placeholder for Firebase implementation
-// We'll need to add the Firebase SDK and configuration when ready
-
-// Import the functions you need from the SDKs
-/*
+// Firebase implementation
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
+// Your Firebase configuration
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_AUTH_DOMAIN",
@@ -20,63 +17,124 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
 
-export { auth, db, storage };
-*/
+// Type definition for the report data
+export interface ReportData {
+  id?: string;
+  userName: string;
+  purpose: string;
+  timeOut: string;
+  timeIn: string;
+  vehicle: string;
+  notes?: string;
+  photoUrl?: string;
+  location?: { lat: number; lng: number };
+  timestamp?: string;
+}
 
-// Temporary mock implementation for development
-export const saveReport = async (reportData: any) => {
-  console.log("Saving report data:", reportData);
-  // In a real implementation, this would save to Firebase
-  
-  return {
-    id: `report-${Date.now()}`,
-    timestamp: new Date().toISOString(),
-    ...reportData
-  };
+// Function to upload an image to Firebase Storage
+export const uploadImage = async (file: File): Promise<string> => {
+  try {
+    // Create a unique file name
+    const fileName = `${Date.now()}_${file.name}`;
+    const storageRef = ref(storage, `photos/${fileName}`);
+    
+    // Upload the file
+    await uploadBytes(storageRef, file);
+    
+    // Get the download URL
+    const downloadURL = await getDownloadURL(storageRef);
+    
+    return downloadURL;
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    throw new Error("Failed to upload image");
+  }
 };
 
-export const getReports = async () => {
-  // Mock data for development
-  return [
-    {
-      id: "report-1",
-      userName: "John Doe",
-      purpose: "Client Meeting",
-      timeOut: "2023-08-15T09:30:00",
-      timeIn: "2023-08-15T13:45:00",
-      vehicle: "Company Car",
-      photoUrl: "https://images.unsplash.com/photo-1551022372-0bdac482d9c2?q=80&w=1000&auto=format&fit=crop",
-      location: { lat: -1.2921, lng: 36.8219 },
-      notes: "Met with client to discuss project requirements",
-      timestamp: "2023-08-15T13:50:23"
-    },
-    {
-      id: "report-2",
-      userName: "Jane Smith",
-      purpose: "Site Inspection",
-      timeOut: "2023-08-16T10:15:00",
-      timeIn: "2023-08-16T15:30:00",
-      vehicle: "Personal Car",
-      photoUrl: "https://images.unsplash.com/photo-1577415124269-fc1140a69e91?q=80&w=1000&auto=format&fit=crop",
-      location: { lat: -1.3032, lng: 36.7073 },
-      notes: "Inspected construction progress at the site",
-      timestamp: "2023-08-16T15:35:41"
-    },
-    {
-      id: "report-3",
-      userName: "Michael Johnson",
-      purpose: "Document Delivery",
-      timeOut: "2023-08-17T13:00:00",
-      timeIn: "2023-08-17T14:30:00",
-      vehicle: "Motorcycle",
-      photoUrl: "https://images.unsplash.com/photo-1521791055366-0d553872125f?q=80&w=1000&auto=format&fit=crop",
-      location: { lat: -1.2864, lng: 36.8172 },
-      notes: "Delivered important documents to government office",
-      timestamp: "2023-08-17T14:35:12"
+// Function to save report data to Firestore
+export const saveReport = async (reportData: ReportData): Promise<string> => {
+  try {
+    // If there's a photo file, upload it and get the URL
+    if (reportData.photoUrl && reportData.photoUrl.startsWith("blob:")) {
+      // This is a local blob URL, we need to replace with firebase URL
+      // But in actual implementation we'd receive a File object instead
+      // This is just to handle the mock data we've been using
+      console.log("Note: In real implementation, upload actual file instead of blob URL");
     }
-  ];
+    
+    // Add timestamp
+    const dataToSave = {
+      ...reportData,
+      createdAt: Timestamp.now()
+    };
+    
+    // Add document to Firestore
+    const docRef = await addDoc(collection(db, "reports"), dataToSave);
+    
+    return docRef.id;
+  } catch (error) {
+    console.error("Error saving report:", error);
+    throw new Error("Failed to save report");
+  }
+};
+
+// Function to get all reports
+export const getReports = async (): Promise<ReportData[]> => {
+  try {
+    // Create a query to get all reports ordered by timestamp
+    const q = query(collection(db, "reports"), orderBy("createdAt", "desc"));
+    
+    // Get documents
+    const querySnapshot = await getDocs(q);
+    
+    // Map documents to ReportData objects
+    const reports: ReportData[] = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      
+      return {
+        id: doc.id,
+        userName: data.userName,
+        purpose: data.purpose,
+        timeOut: data.timeOut,
+        timeIn: data.timeIn,
+        vehicle: data.vehicle,
+        notes: data.notes,
+        photoUrl: data.photoUrl,
+        location: data.location,
+        timestamp: data.createdAt.toDate().toISOString()
+      };
+    });
+    
+    return reports;
+  } catch (error) {
+    console.error("Error getting reports:", error);
+    throw new Error("Failed to get reports");
+  }
+};
+
+// Function for a realistic saveReport implementation
+export const saveReportWithPhoto = async (reportData: any, photoFile: File): Promise<string> => {
+  try {
+    // First, upload the photo to Firebase Storage
+    const photoUrl = await uploadImage(photoFile);
+    
+    // Then save the report data with the photo URL to Firestore
+    const dataToSave = {
+      ...reportData,
+      photoUrl,
+      createdAt: Timestamp.now()
+    };
+    
+    // Add document to Firestore
+    const docRef = await addDoc(collection(db, "reports"), dataToSave);
+    
+    return docRef.id;
+  } catch (error) {
+    console.error("Error saving report with photo:", error);
+    throw new Error("Failed to save report with photo");
+  }
 };

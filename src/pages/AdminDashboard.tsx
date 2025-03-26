@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -17,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReportCard from "@/components/ReportCard";
 import { getReports } from "@/utils/firebase";
+import { useQuery } from "@tanstack/react-query";
 
 interface Report {
   id: string;
@@ -32,31 +32,25 @@ interface Report {
 }
 
 const AdminDashboard = () => {
-  const [reports, setReports] = useState<Report[]>([]);
   const [filteredReports, setFilteredReports] = useState<Report[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadReports = async () => {
-      try {
-        const data = await getReports();
-        setReports(data);
-        setFilteredReports(data);
-      } catch (error) {
-        console.error("Error loading reports:", error);
-        toast.error("Failed to load reports");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadReports();
-  }, []);
+  const { 
+    data: reports = [], 
+    isLoading, 
+    refetch,
+    isRefetching
+  } = useQuery({
+    queryKey: ['reports'],
+    queryFn: getReports,
+    onError: (error) => {
+      console.error("Error fetching reports:", error);
+      toast.error("Failed to load reports");
+    }
+  });
 
   useEffect(() => {
-    // Apply filters whenever search or date changes
     let results = reports;
 
     if (searchTerm) {
@@ -81,28 +75,87 @@ const AdminDashboard = () => {
   }, [searchTerm, selectedDate, reports]);
 
   const handleExport = () => {
-    // In a real app, this would generate CSV or Excel
+    if (filteredReports.length === 0) {
+      toast.error("No reports to export");
+      return;
+    }
+    
+    const headers = "ID,Name,Purpose,Start Time,Return Time,Vehicle,Notes,Location,Timestamp\n";
+    const csv = filteredReports.reduce((acc, report) => {
+      const row = [
+        report.id,
+        report.userName,
+        report.purpose,
+        new Date(report.timeOut).toLocaleString(),
+        new Date(report.timeIn).toLocaleString(),
+        report.vehicle,
+        report.notes || "",
+        `${report.location.lat},${report.location.lng}`,
+        new Date(report.timestamp).toLocaleString()
+      ].map(value => `"${String(value).replace(/"/g, '""')}"`).join(",");
+      
+      return acc + row + "\n";
+    }, headers);
+    
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `reports_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
     toast.success("Reports exported successfully!");
   };
 
-  const handleRefresh = async () => {
-    setIsLoading(true);
-    try {
-      const data = await getReports();
-      setReports(data);
-      setFilteredReports(data);
-      toast.success("Reports refreshed successfully!");
-    } catch (error) {
-      console.error("Error refreshing reports:", error);
-      toast.error("Failed to refresh reports");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleRefresh = () => {
+    refetch();
   };
 
   const handleDateFilterClear = () => {
     setSelectedDate(null);
   };
+
+  const analytics = {
+    totalReports: reports.length,
+    mostCommonPurpose: getMostCommon(reports, 'purpose'),
+    mostActiveUser: getMostCommon(reports, 'userName'),
+    averageTimeOut: getAverageTimeOut(reports)
+  };
+
+  function getMostCommon(items: any[], key: string): string {
+    if (items.length === 0) return "N/A";
+    
+    const counts: Record<string, number> = {};
+    items.forEach(item => {
+      const value = item[key];
+      counts[value] = (counts[value] || 0) + 1;
+    });
+    
+    const mostCommon = Object.entries(counts).reduce(
+      (max, [value, count]) => count > max[1] ? [value, count] : max, 
+      ["", 0]
+    );
+    
+    return mostCommon[0];
+  }
+
+  function getAverageTimeOut(items: Report[]): string {
+    if (items.length === 0) return "N/A";
+    
+    const totalMinutes = items.reduce((total, report) => {
+      const start = new Date(report.timeOut).getTime();
+      const end = new Date(report.timeIn).getTime();
+      return total + (end - start) / (1000 * 60);
+    }, 0);
+    
+    const avgMinutes = totalMinutes / items.length;
+    const hours = Math.floor(avgMinutes / 60);
+    const minutes = Math.round(avgMinutes % 60);
+    
+    return `${hours} h ${minutes} min`;
+  }
 
   const today = format(new Date(), "yyyy-MM-dd");
 
@@ -131,9 +184,9 @@ const AdminDashboard = () => {
                 variant="outline" 
                 size="icon"
                 onClick={handleRefresh}
-                disabled={isLoading}
+                disabled={isLoading || isRefetching}
               >
-                {isLoading ? (
+                {isLoading || isRefetching ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <RefreshCw className="h-4 w-4" />
@@ -143,6 +196,7 @@ const AdminDashboard = () => {
                 variant="outline" 
                 size="icon"
                 onClick={handleExport}
+                disabled={isLoading || filteredReports.length === 0}
               >
                 <Download className="h-4 w-4" />
               </Button>
@@ -217,22 +271,22 @@ const AdminDashboard = () => {
                 <div className="space-y-4">
                   <div className="glass-card p-4 rounded-lg">
                     <p className="text-sm font-medium text-muted-foreground mb-1">Total Reports</p>
-                    <p className="text-3xl font-bold">{reports.length}</p>
+                    <p className="text-3xl font-bold">{analytics.totalReports}</p>
                   </div>
                   
                   <div className="glass-card p-4 rounded-lg">
                     <p className="text-sm font-medium text-muted-foreground mb-1">Most Common Purpose</p>
-                    <p className="text-xl font-semibold">Client Meeting</p>
+                    <p className="text-xl font-semibold">{analytics.mostCommonPurpose}</p>
                   </div>
                   
                   <div className="glass-card p-4 rounded-lg">
                     <p className="text-sm font-medium text-muted-foreground mb-1">Most Active User</p>
-                    <p className="text-xl font-semibold">John Doe</p>
+                    <p className="text-xl font-semibold">{analytics.mostActiveUser}</p>
                   </div>
                   
                   <div className="glass-card p-4 rounded-lg">
                     <p className="text-sm font-medium text-muted-foreground mb-1">Average Time Out</p>
-                    <p className="text-xl font-semibold">3.5 hours</p>
+                    <p className="text-xl font-semibold">{analytics.averageTimeOut}</p>
                   </div>
                 </div>
               </TabsContent>
