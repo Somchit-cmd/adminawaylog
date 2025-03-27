@@ -6,12 +6,13 @@ import { getFirestore, collection, addDoc, getDocs, query, orderBy, Timestamp } 
 
 // Your Firebase configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCNk9KPd_QQtJURp8iFPrZKeex56K1N5_A",
+  authDomain: "admin-away-log.firebaseapp.com",
+  projectId: "admin-away-log",
+  storageBucket: "admin-away-log.firebasestorage.app",
+  messagingSenderId: "418840841692",
+  appId: "1:418840841692:web:433c98841258d985735319",
+  measurementId: "G-VLWLXRYMSK"
 };
 
 // Initialize Firebase
