@@ -44,13 +44,21 @@ export const saveReport = async (reportData: ReportData): Promise<string> => {
       createdAt: Timestamp.now()
     };
     
+    // Check if the payload is too large
+    const payloadSize = JSON.stringify(dataToSave).length;
+    const maxSize = 1000000; // Firestore's max document size ~1MB
+    
+    if (payloadSize > maxSize) {
+      throw new Error(`Data exceeds Firestore's 1MB limit (${Math.round(payloadSize/1024)}KB)`);
+    }
+    
     // Add document to Firestore
     const docRef = await addDoc(collection(db, "reports"), dataToSave);
     
     return docRef.id;
   } catch (error) {
     console.error("Error saving report:", error);
-    throw new Error("Failed to save report");
+    throw new Error("Failed to save report: " + (error instanceof Error ? error.message : "Unknown error"));
   }
 };
 
@@ -98,16 +106,14 @@ export const saveReportWithPhoto = async (reportData: any, photoFile: File, phot
 
     // Store the photo as base64 in Firestore
     if (photoBase64) {
+      // Check if the base64 string is too long
+      if (photoBase64.length > 900000) { // ~900KB to be safe with other data
+        throw new Error("Photo is too large for Firestore, even after compression");
+      }
       dataToSave.photoBase64 = photoBase64;
     } else {
-      // Convert the file to base64 if not already provided
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve) => {
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(photoFile);
-      });
-      
-      dataToSave.photoBase64 = await base64Promise;
+      // This should not happen with the updated PhotoUpload component
+      throw new Error("No photo data was provided");
     }
     
     // Add document to Firestore
@@ -116,6 +122,6 @@ export const saveReportWithPhoto = async (reportData: any, photoFile: File, phot
     return docRef.id;
   } catch (error) {
     console.error("Error saving report with photo:", error);
-    throw new Error("Failed to save report with photo");
+    throw new Error("Failed to save report with photo: " + (error instanceof Error ? error.message : "Unknown error"));
   }
 };
