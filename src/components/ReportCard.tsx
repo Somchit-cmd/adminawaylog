@@ -37,7 +37,7 @@ const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
     <div className="glass-card rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl animate-fade-in">
       <div className="relative h-48">
         <img
-          src={report.photoUrl}
+          src={report.photoBase64}
           alt={`Photo for ${report.purpose}`}
           className="w-full h-full object-cover"
         />
