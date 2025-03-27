@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
 import { ClipboardList, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import LocationPicker from "@/components/LocationPicker";
 import PhotoUpload from "@/components/PhotoUpload";
-import { saveReportWithPhoto } from "@/utils/firebase";
+import { saveReportWithPhoto, vehicleOptions } from "@/utils/firebase";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FormValues {
@@ -34,6 +35,7 @@ const UserForm = () => {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     reset
   } = useForm<FormValues>();
@@ -153,11 +155,27 @@ const UserForm = () => {
 
               <div className="grid gap-3">
                 <Label htmlFor="vehicle">Vehicle Used</Label>
-                <Input
-                  id="vehicle"
-                  placeholder="What transport did you use?"
-                  className="form-input"
-                  {...register("vehicle", { required: "Vehicle is required" })}
+                <Controller
+                  name="vehicle"
+                  control={control}
+                  rules={{ required: "Vehicle is required" }}
+                  render={({ field }) => (
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger id="vehicle" className="w-full">
+                        <SelectValue placeholder="Select a vehicle" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vehicleOptions.map((vehicle) => (
+                          <SelectItem key={vehicle} value={vehicle}>
+                            {vehicle}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
                 {errors.vehicle && (
                   <p className="text-sm text-destructive">{errors.vehicle.message}</p>

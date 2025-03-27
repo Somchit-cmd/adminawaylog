@@ -20,6 +20,18 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
+// Vehicle options for the dropdown
+export const vehicleOptions = [
+  "Honda Wave 1293",
+  "Honda Wave 6998",
+  "Honda Wave 0346",
+  "Honda Move 9257",
+  "Honda Click I 0353",
+  "Toyota Revo 1188",
+  "Toyota Vios 1188",
+  "Toyota Vigo 5609"
+];
+
 // Type definition for the report data
 export interface ReportData {
   id?: string; // Optional since it's assigned by Firestore
