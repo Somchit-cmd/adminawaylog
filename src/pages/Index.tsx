@@ -11,8 +11,8 @@ const Index = () => {
     <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center">
       <div className="w-full max-w-3xl mx-auto text-center space-y-8 animate-fade-in">
         <div className="space-y-4">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            Admin Away Log
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent py-2">
+            MSIG Sokxay Admin Away Log
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Track and manage field work activities with ease. Designed for admin officers working outside the office.

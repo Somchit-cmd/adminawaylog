@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ClipboardList, LayoutDashboard, LogOut } from "lucide-react";
@@ -28,8 +27,16 @@ const Navbar = () => {
 
   const navLinks = [
     { name: "Home", path: "/", icon: null },
-    { name: "Report Activity", path: "/report", icon: <ClipboardList className="w-4 h-4 mr-2" /> },
-    { name: "Admin Dashboard", path: "/admin", icon: <LayoutDashboard className="w-4 h-4 mr-2" /> },
+    {
+      name: "Report Activity",
+      path: "/report",
+      icon: <ClipboardList className="w-4 h-4 mr-2" />,
+    },
+    {
+      name: "Admin Dashboard",
+      path: "/admin",
+      icon: <LayoutDashboard className="w-4 h-4 mr-2" />,
+    },
   ];
 
   return (
@@ -43,9 +50,14 @@ const Navbar = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <Link to="/" className="flex items-center space-x-2">
-            <span className="font-bold text-xl bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            <img
+              src="https://i.imgur.com/me9MsE9.png"
+              alt="Logo"
+              className="h-10 w-auto"
+            />
+            {/* <span className="font-bold text-xl bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
               AdminAwayLog
-            </span>
+            </span> */}
           </Link>
 
           {/* Desktop Navigation */}
@@ -112,12 +124,16 @@ const Navbar = () => {
                     : "text-foreground/70 hover:text-foreground hover:bg-secondary"
                 }`}
               >
-                {link.icon && React.cloneElement(link.icon, { className: "w-5 h-5 mr-3" })}
+                {link.icon &&
+                  React.cloneElement(link.icon, { className: "w-5 h-5 mr-3" })}
                 {link.name}
               </Link>
             ))}
             <div className="flex-grow"></div>
-            <Button variant="outline" className="mt-auto flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              className="mt-auto flex items-center justify-center gap-2"
+            >
               <LogOut className="w-4 h-4" />
               Sign Out
             </Button>
