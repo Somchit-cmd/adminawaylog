@@ -3,7 +3,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -19,7 +18,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const storage = getStorage(app);
 
 // Type definition for the report data
 export interface ReportData {
@@ -30,32 +28,11 @@ export interface ReportData {
   timeIn: string;
   vehicle: string;
   notes?: string;
-  photoUrl?: string;
-  photoBase64?: string; // New field for storing base64 images
+  photoBase64?: string; // Store base64 images directly in Firestore
   location?: { lat: number; lng: number };
   timestamp?: string; // ISO string date
   createdAt?: Timestamp; // Firestore timestamp
 }
-
-// Function to upload an image to Firebase Storage (Optional - only if Storage is available)
-export const uploadImage = async (file: File): Promise<string> => {
-  try {
-    // Create a unique file name
-    const fileName = `${Date.now()}_${file.name}`;
-    const storageRef = ref(storage, `photos/${fileName}`);
-    
-    // Upload the file
-    await uploadBytes(storageRef, file);
-    
-    // Get the download URL
-    const downloadURL = await getDownloadURL(storageRef);
-    
-    return downloadURL;
-  } catch (error) {
-    console.error("Error uploading image:", error);
-    throw new Error("Failed to upload image");
-  }
-};
 
 // Function to save report data to Firestore
 export const saveReport = async (reportData: ReportData): Promise<string> => {
@@ -97,7 +74,6 @@ export const getReports = async (): Promise<ReportData[]> => {
         timeIn: data.timeIn,
         vehicle: data.vehicle,
         notes: data.notes,
-        photoUrl: data.photoUrl,
         photoBase64: data.photoBase64,
         location: data.location,
         timestamp: data.createdAt?.toDate()?.toISOString() || new Date().toISOString()
@@ -111,7 +87,7 @@ export const getReports = async (): Promise<ReportData[]> => {
   }
 };
 
-// Function for a realistic saveReport implementation using base64
+// Function for saving reports with photos (base64 only)
 export const saveReportWithPhoto = async (reportData: any, photoFile: File, photoBase64?: string): Promise<string> => {
   try {
     let dataToSave: any = {
@@ -119,26 +95,18 @@ export const saveReportWithPhoto = async (reportData: any, photoFile: File, phot
       createdAt: Timestamp.now()
     };
 
-    // If photoBase64 is provided, store it directly in Firestore
+    // Store the photo as base64 in Firestore
     if (photoBase64) {
       dataToSave.photoBase64 = photoBase64;
     } else {
-      // Try to upload to Storage if available
-      try {
-        const photoUrl = await uploadImage(photoFile);
-        dataToSave.photoUrl = photoUrl;
-      } catch (storageError) {
-        console.warn("Firebase Storage error, falling back to base64:", storageError);
-        
-        // Convert the file to base64 as fallback
-        const reader = new FileReader();
-        const base64Promise = new Promise<string>((resolve) => {
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(photoFile);
-        });
-        
-        dataToSave.photoBase64 = await base64Promise;
-      }
+      // Convert the file to base64 if not already provided
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(photoFile);
+      });
+      
+      dataToSave.photoBase64 = await base64Promise;
     }
     
     // Add document to Firestore

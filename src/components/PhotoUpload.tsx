@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from "react";
-import { Camera, X } from "lucide-react";
+import { Camera, X, ImageUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -18,9 +18,9 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onPhotoCapture }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File is too large. Maximum size is 5MB.");
+    // Check file size (max 1MB for Firestore limitations)
+    if (file.size > 1 * 1024 * 1024) {
+      toast.error("File is too large. Maximum size is 1MB for Firestore.");
       return;
     }
 
@@ -68,20 +68,18 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onPhotoCapture }) => {
               className="glass-button flex-1 flex items-center justify-center gap-2"
             >
               <Camera className="h-4 w-4" />
-              Take Photo
+              {isMobile ? "Take Photo" : "Camera"}
             </Button>
             
-            {!isMobile && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-1 flex items-center justify-center gap-2"
-              >
-                <Camera className="h-4 w-4" />
-                Upload Photo
-              </Button>
-            )}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 flex items-center justify-center gap-2"
+            >
+              <ImageUp className="h-4 w-4" />
+              Upload Image
+            </Button>
           </div>
         ) : (
           <div className="relative">
