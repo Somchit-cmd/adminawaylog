@@ -1,0 +1,57 @@
+{
+  "rules": {
+    "reports": {
+      ".read": "auth != null && (auth.token.admin === true || auth.token.moderator === true)",
+      ".write": "auth != null",
+      "$reportId": {
+        ".validate": "newData.hasChildren(['userName', 'purpose', 'timeOut', 'timeIn', 'vehicle', 'location', 'timestamp'])",
+        "userName": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+        },
+        "purpose": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 500"
+        },
+        "timeOut": {
+          ".validate": "newData.isString() && newData.val().matches(/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/)"
+        },
+        "timeIn": {
+          ".validate": "newData.isString() && newData.val().matches(/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/)"
+        },
+        "vehicle": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 50"
+        },
+        "notes": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 1000)"
+        },
+        "location": {
+          ".validate": "newData.hasChildren(['lat', 'lng'])",
+          "lat": {
+            ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90"
+          },
+          "lng": {
+            ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180"
+          }
+        },
+        "timestamp": {
+          ".validate": "newData.isNumber() && newData.val() <= now"
+        },
+        ".write": "auth != null && (!data.exists() || data.child('userName').val() === auth.token.name)"
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "profile": {
+          ".validate": "newData.hasChildren(['name', 'role'])",
+          "name": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+          },
+          "role": {
+            ".validate": "newData.isString() && newData.val().matches(/^(user|admin|moderator)$/)"
+          }
+        }
+      }
+    }
+  }
+} 

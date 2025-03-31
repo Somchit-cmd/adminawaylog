@@ -55,6 +55,9 @@ const resources = {
         exportReports: "Export Reports",
         noReportsToExport: "No reports to export",
         exportSuccess: "Reports exported successfully",
+        exportAsCsv: "Export as CSV",
+        exportAsPdf: "Export as PDF",
+        exportError: "Failed to export reports",
         analytics: {
           title: "Analytics",
           tabs: {
@@ -197,6 +200,9 @@ const resources = {
         exportReports: "ສົ່ງອອກລາຍງານ",
         noReportsToExport: "ບໍ່ມີລາຍງານທີ່ຈະສົ່ງອອກ",
         exportSuccess: "ສົ່ງອອກລາຍງານສຳເລັດແລ້ວ",
+        exportAsCsv: "ສົ່ງອອກເປັນ CSV",
+        exportAsPdf: "ສົ່ງອອກເປັນ PDF",
+        exportError: "ການສົ່ງອອກລາຍງານລົ້ມເຫລວ",
         allReports: "ເບິ່ງລາຍງານທັງໝົດ",
         recentActivities: "ກິດຈະກຳຫຼ້າສຸດ",
         status: "ສະຖານະ",

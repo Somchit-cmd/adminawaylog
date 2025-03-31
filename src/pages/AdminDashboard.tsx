@@ -36,6 +36,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "@/components/Navbar";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { sanitizeInput, checkExportRateLimit, throttleSearch, handleError } from "@/utils/security";
 
 // Update the Report interface to match ReportData but make id required
 type Report = Required<Pick<ReportData, 'id'>> & Omit<ReportData, 'id'>;
@@ -89,6 +90,11 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleSearch = (value: string) => {
+    const sanitizedTerm = sanitizeInput(value);
+    setSearchTerm(sanitizedTerm);
+  };
+
   useEffect(() => {
     if (!reports) return;
     
@@ -104,10 +110,10 @@ const AdminDashboard = () => {
       const term = searchTerm.toLowerCase();
       results = results.filter(
         (report) =>
-          report.userName.toLowerCase().includes(term) ||
-          report.purpose.toLowerCase().includes(term) ||
-          report.vehicle.toLowerCase().includes(term) ||
-          (report.notes && report.notes.toLowerCase().includes(term))
+          sanitizeInput(report.userName).toLowerCase().includes(term) ||
+          sanitizeInput(report.purpose).toLowerCase().includes(term) ||
+          sanitizeInput(report.vehicle).toLowerCase().includes(term) ||
+          (report.notes && sanitizeInput(report.notes).toLowerCase().includes(term))
       );
     }
 
@@ -122,38 +128,47 @@ const AdminDashboard = () => {
   }, [searchTerm, selectedDate, reports]);
 
   const handleExport = () => {
-    if (filteredReports.length === 0) {
-      toast.error("No reports to export");
-      return;
-    }
-    
-    const headers = "ID,Name,Purpose,Start Time,Return Time,Vehicle,Notes,Location,Timestamp\n";
-    const csv = filteredReports.reduce((acc, report) => {
-      const row = [
-        report.id,
-        report.userName,
-        report.purpose,
-        new Date(report.timeOut).toLocaleString(),
-        new Date(report.timeIn).toLocaleString(),
-        report.vehicle,
-        report.notes || "",
-        `${report.location.lat},${report.location.lng}`,
-        new Date(report.timestamp).toLocaleString()
-      ].map(value => `"${String(value).replace(/"/g, '""')}"`).join(",");
+    try {
+      if (filteredReports.length === 0) {
+        toast.error(t('admin.noReports'));
+        return;
+      }
+
+      if (!checkExportRateLimit()) {
+        return;
+      }
       
-      return acc + row + "\n";
-    }, headers);
-    
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `reports_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success("Reports exported successfully!");
+      const headers = "ID,Name,Purpose,Start Time,Return Time,Vehicle,Notes,Location,Timestamp\n";
+      const csv = filteredReports.reduce((acc, report) => {
+        const row = [
+          sanitizeInput(report.id),
+          sanitizeInput(report.userName),
+          sanitizeInput(report.purpose),
+          new Date(report.timeOut).toLocaleString(),
+          new Date(report.timeIn).toLocaleString(),
+          sanitizeInput(report.vehicle),
+          sanitizeInput(report.notes || ""),
+          `${report.location.lat},${report.location.lng}`,
+          new Date(report.timestamp).toLocaleString()
+        ].map(value => `"${String(value).replace(/"/g, '""')}"`).join(",");
+        
+        return acc + row + "\n";
+      }, headers);
+      
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `reports_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url); // Clean up the URL object
+      
+      toast.success(t('admin.exportSuccess'));
+    } catch (error) {
+      toast.error(handleError(error, t('admin.exportError')));
+    }
   };
 
   const handleRefresh = () => {
@@ -273,7 +288,7 @@ const AdminDashboard = () => {
                     type="text"
                     placeholder={t('admin.searchPlaceholder')}
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => throttleSearch(() => handleSearch(e.target.value))}
                     className="flex-1"
                   />
                   <Button variant="outline" className="gap-2" onClick={handleDateFilterClear}>

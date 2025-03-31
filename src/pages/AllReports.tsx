@@ -11,7 +11,9 @@ import {
   MoreHorizontal,
   Image as ImageIcon,
   MapPin,
-  ExternalLink
+  ExternalLink,
+  FileText,
+  Table as TableIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +42,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+// Add type declarations for PDF libraries
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 // Update the Report interface to match ReportData but make id required
 type Report = Required<Pick<ReportData, 'id'>> & Omit<ReportData, 'id'> & {
@@ -111,7 +123,7 @@ const AllReports = () => {
     setFilteredReports(results);
   }, [searchTerm, selectedDate, reports]);
 
-  const handleExport = () => {
+  const handleCsvExport = () => {
     if (filteredReports.length === 0) {
       toast.error(t('admin.noReportsToExport'));
       return;
@@ -142,8 +154,58 @@ const AllReports = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
     
     toast.success(t('admin.exportSuccess'));
+  };
+
+  const handlePdfExport = async () => {
+    if (filteredReports.length === 0) {
+      toast.error(t('admin.noReportsToExport'));
+      return;
+    }
+
+    try {
+      const { jsPDF } = await import('jspdf');
+      const { autoTable } = await import('jspdf-autotable');
+      
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(16);
+      doc.text('Vehicle Usage Reports', 14, 15);
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+      
+      // Prepare table data
+      const tableData = filteredReports.map(report => [
+        report.userName,
+        report.purpose,
+        new Date(report.timeOut).toLocaleString(),
+        new Date(report.timeIn).toLocaleString(),
+        report.vehicle,
+        `${report.location.lat}, ${report.location.lng}`,
+        report.notes || '-'
+      ]);
+      
+      // Add table
+      autoTable(doc, {
+        head: [['Name', 'Purpose', 'Start Time', 'Return Time', 'Vehicle', 'Location', 'Notes']],
+        body: tableData,
+        startY: 25,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [41, 128, 185] },
+        alternateRowStyles: { fillColor: [242, 242, 242] },
+        margin: { top: 25 }
+      });
+      
+      // Save PDF
+      doc.save(`reports_${new Date().toISOString().split('T')[0]}.pdf`);
+      toast.success(t('admin.exportSuccess'));
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error(t('admin.exportError'));
+    }
   };
 
   const handleDateFilterClear = () => {
@@ -170,15 +232,28 @@ const AllReports = () => {
               {t('admin.filterReports')}
             </p>
           </div>
-          <Button 
-            variant="outline" 
-            onClick={handleExport}
-            className="flex items-center gap-2"
-            disabled={filteredReports.length === 0}
-          >
-            <Download className="h-4 w-4" />
-            {t('admin.exportReports')}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                disabled={filteredReports.length === 0}
+              >
+                <Download className="h-4 w-4" />
+                {t('admin.exportReports')}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleCsvExport} className="flex items-center gap-2">
+                <TableIcon className="h-4 w-4" />
+                <span>{t('admin.exportAsCsv')}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handlePdfExport} className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                <span>{t('admin.exportAsPdf')}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <Card className="glass-card">
