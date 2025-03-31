@@ -15,8 +15,10 @@ export function Report() {
   const [formData, setFormData] = useState({
     userName: "",
     purpose: "",
-    timeOut: "",
-    timeIn: "",
+    timeOutDate: "",
+    timeOutTime: "",
+    timeInDate: "",
+    timeInTime: "",
     vehicle: "",
     photo: null as File | null,
     location: "",
@@ -28,7 +30,15 @@ export function Report() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
+    const timeOut = formData.timeOutDate && formData.timeOutTime 
+      ? `${formData.timeOutDate}T${formData.timeOutTime}` 
+      : "";
+    const timeIn = formData.timeInDate && formData.timeInTime 
+      ? `${formData.timeInDate}T${formData.timeInTime}` 
+      : "";
+    
+    // Handle form submission with combined datetime
+    console.log({ ...formData, timeOut, timeIn });
   };
 
   // Handle camera capture
@@ -120,25 +130,41 @@ export function Report() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="timeOut">{t('report.form.timeOut')}</Label>
-              <Input
-                id="timeOut"
-                type="datetime-local"
-                value={formData.timeOut}
-                onChange={(e) => setFormData({ ...formData, timeOut: e.target.value })}
-                placeholder={t('report.form.placeholders.dateFormat')}
-                required
-              />
+              <div className="space-y-2">
+                <Input
+                  id="timeOutDate"
+                  type="date"
+                  value={formData.timeOutDate}
+                  onChange={(e) => setFormData({ ...formData, timeOutDate: e.target.value })}
+                  required
+                />
+                <Input
+                  id="timeOutTime"
+                  type="time"
+                  value={formData.timeOutTime}
+                  onChange={(e) => setFormData({ ...formData, timeOutTime: e.target.value })}
+                  required
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="timeIn">{t('report.form.timeIn')}</Label>
-              <Input
-                id="timeIn"
-                type="datetime-local"
-                value={formData.timeIn}
-                onChange={(e) => setFormData({ ...formData, timeIn: e.target.value })}
-                placeholder={t('report.form.placeholders.dateFormat')}
-                required
-              />
+              <div className="space-y-2">
+                <Input
+                  id="timeInDate"
+                  type="date"
+                  value={formData.timeInDate}
+                  onChange={(e) => setFormData({ ...formData, timeInDate: e.target.value })}
+                  required
+                />
+                <Input
+                  id="timeInTime"
+                  type="time"
+                  value={formData.timeInTime}
+                  onChange={(e) => setFormData({ ...formData, timeInTime: e.target.value })}
+                  required
+                />
+              </div>
             </div>
           </div>
 
