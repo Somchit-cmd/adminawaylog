@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "react-i18next";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClipboardIcon, CameraIcon, UploadIcon, MapPinIcon } from "lucide-react";
+import React from "react";
 
 export function Report() {
   const navigate = useNavigate();
@@ -22,9 +23,74 @@ export function Report() {
     notes: ""
   });
 
+  // Hidden file input ref for upload
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Handle form submission
+  };
+
+  // Handle camera capture
+  const handleCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // Create video element
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.play();
+
+      // Create canvas
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      // Wait for video to load
+      video.onloadedmetadata = () => {
+        // Draw video frame to canvas
+        const context = canvas.getContext('2d');
+        context?.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Convert to file
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], "camera-photo.jpg", { type: "image/jpeg" });
+            setFormData({ ...formData, photo: file });
+          }
+          // Stop camera
+          stream.getTracks().forEach(track => track.stop());
+        }, 'image/jpeg');
+      };
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+    }
+  };
+
+  // Handle file upload
+  const handleUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData({ ...formData, photo: file });
+    }
+  };
+
+  // Handle location capture
+  const handleLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setFormData({ ...formData, location: `${latitude},${longitude}` });
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+        }
+      );
+    }
   };
 
   return (
@@ -110,23 +176,44 @@ export function Report() {
           <div className="space-y-2">
             <Label>{t('report.form.photo')}</Label>
             <div className="grid grid-cols-2 gap-4">
-              <Button type="button" className="w-full bg-blue-500 hover:bg-blue-600 text-white">
+              <Button type="button" onClick={handleCamera} className="w-full bg-blue-500 hover:bg-blue-600 text-white">
                 <CameraIcon className="h-4 w-4 mr-2" />
                 {t('report.form.camera')}
               </Button>
-              <Button type="button" variant="outline" className="w-full">
+              <Button type="button" onClick={handleUpload} variant="outline" className="w-full">
                 <UploadIcon className="h-4 w-4 mr-2" />
                 {t('report.form.uploadImage')}
               </Button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+              />
             </div>
+            {formData.photo && (
+              <div className="mt-2">
+                <img
+                  src={URL.createObjectURL(formData.photo)}
+                  alt="Selected"
+                  className="max-h-40 rounded-lg"
+                />
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label>{t('report.form.location')}</Label>
-            <Button type="button" className="w-full bg-blue-500 hover:bg-blue-600 text-white">
+            <Button type="button" onClick={handleLocation} className="w-full bg-blue-500 hover:bg-blue-600 text-white">
               <MapPinIcon className="h-4 w-4 mr-2" />
               {t('report.form.captureCurrentLocation')}
             </Button>
+            {formData.location && (
+              <p className="text-sm text-muted-foreground mt-2">
+                {t('report.form.locationCaptured')}: {formData.location}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
