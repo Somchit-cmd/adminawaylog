@@ -34,33 +34,21 @@ export function Report() {
   // Handle camera capture
   const handleCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      // Create video element
-      const video = document.createElement('video');
-      video.srcObject = stream;
-      video.play();
-
-      // Create canvas
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      // Wait for video to load
-      video.onloadedmetadata = () => {
-        // Draw video frame to canvas
-        const context = canvas.getContext('2d');
-        context?.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // Convert to file
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const file = new File([blob], "camera-photo.jpg", { type: "image/jpeg" });
-            setFormData({ ...formData, photo: file });
-          }
-          // Stop camera
-          stream.getTracks().forEach(track => track.stop());
-        }, 'image/jpeg');
+      // Create a file input that only accepts camera photos
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment'; // This forces the camera on mobile devices
+      
+      // Handle the file selection
+      input.onchange = (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          setFormData({ ...formData, photo: file });
+        }
       };
+      
+      input.click();
     } catch (error) {
       console.error('Error accessing camera:', error);
     }
