@@ -7,10 +7,23 @@ import {
   Filter, 
   Download, 
   Loader2, 
-  Map as MapIcon, 
   RefreshCw,
-  LogOut
+  LogOut,
+  BarChart3,
+  PieChart as PieChartIcon
 } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +39,8 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 // Update the Report interface to match ReportData but make id required
 type Report = Required<Pick<ReportData, 'id'>> & Omit<ReportData, 'id'>;
+
+const CHART_COLORS = ['#0ea5e9', '#f43f5e', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#8b5cf6'];
 
 const AdminDashboard = () => {
   const { t } = useTranslation();
@@ -191,6 +206,28 @@ const AdminDashboard = () => {
 
   const today = format(new Date(), "yyyy-MM-dd");
 
+  const getChartData = () => {
+    if (filteredReports.length === 0) return { vehicles: [] };
+
+    const vehicleCounts: Record<string, number> = {};
+
+    filteredReports.forEach(report => {
+      // Count vehicles
+      vehicleCounts[report.vehicle] = (vehicleCounts[report.vehicle] || 0) + 1;
+    });
+
+    const vehicles = Object.entries(vehicleCounts)
+      .map(([name, value]) => ({ 
+        name, // Use the vehicle name directly
+        value 
+      }))
+      .sort((a, b) => b.value - a.value);
+
+    return { vehicles };
+  };
+
+  const chartData = getChartData();
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -264,15 +301,21 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
+          <Card className="glass-card col-span-3 lg:col-span-1">
             <CardHeader>
               <CardTitle>{t('admin.analytics.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="summary" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="summary">{t('admin.analytics.tabs.summary')}</TabsTrigger>
-                  <TabsTrigger value="map">{t('admin.analytics.tabs.map')}</TabsTrigger>
+                  <TabsTrigger value="summary" className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    {t('admin.analytics.tabs.summary')}
+                  </TabsTrigger>
+                  <TabsTrigger value="charts" className="flex items-center gap-2">
+                    <PieChartIcon className="h-4 w-4" />
+                    {t('admin.analytics.tabs.charts')}
+                  </TabsTrigger>
                 </TabsList>
                 <TabsContent value="summary">
                   <div className="space-y-4">
@@ -307,21 +350,31 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 </TabsContent>
-                <TabsContent value="map">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <MapIcon className="h-4 w-4" />
-                      <h3 className="text-sm font-medium">
-                        {t('admin.analytics.map.title')}
-                      </h3>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {t('admin.analytics.map.description')}
-                    </p>
-                    <div className="flex items-center justify-center h-[200px] bg-muted rounded-lg">
-                      <p className="text-sm text-muted-foreground">
-                        {t('admin.analytics.map.comingSoon')}
-                      </p>
+                <TabsContent value="charts">
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-4">
+                      {t('admin.analytics.charts.vehicleUsage')}
+                    </h3>
+                    <div className="h-[320px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={chartData.vehicles}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                            outerRadius={120}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {chartData.vehicles.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
                     </div>
                   </div>
                 </TabsContent>

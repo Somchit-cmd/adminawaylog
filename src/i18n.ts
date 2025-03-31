@@ -36,7 +36,7 @@ const resources = {
       },
       admin: {
         dashboard: "Admin Dashboard",
-        reports: "Reports",
+        reports: "All Reports",
         totalReports: "Total Reports",
         todayReports: "Today's Reports",
         pendingReports: "Pending Reports",
@@ -57,19 +57,19 @@ const resources = {
         exportSuccess: "Reports exported successfully",
         analytics: {
           title: "Analytics",
+          tabs: {
+            summary: "Summary",
+            charts: "Charts"
+          },
           totalReports: "Total Reports",
           mostCommonPurpose: "Most Common Purpose",
           mostActiveUser: "Most Active User",
           averageTimeOut: "Average Time Out",
-          timeFormat: "{{hours}} hours  {{minutes}} minutes",
-          tabs: {
-            summary: "Summary",
-            map: "Map View"
-          },
-          map: {
-            title: "Field Activities Map",
-            description: "View field activities on the map",
-            comingSoon: "Google Maps integration will be available here"
+          timeFormat: "{{hours}} hours {{minutes}} minutes",
+          charts: {
+            topPurposes: "Top Purposes",
+            activeUsers: "Active Users Distribution",
+            vehicleUsage: "Vehicle Usage Distribution"
           }
         },
         filters: {
@@ -89,7 +89,8 @@ const resources = {
           "toyota-revo-1188": "Toyota Revo 1188",
           "toyota-vios-1188": "Toyota Vios 1188",
           "toyota-vigo-5609": "Toyota Vigo 5609"
-        }
+        },
+        openInMaps: "Open in Google Maps"
       },
       home: {
         title: "MSIG Sokxay Admin Away Log",
@@ -110,7 +111,7 @@ const resources = {
         form: {
           description: "Fill the form with details of your work outside the office",
           userName: "Your Name",
-          purpose: "Purpose of Trip",
+          purpose: "Destination of Trip",
           timeOut: "Start Time",
           timeIn: "Return Time",
           vehicle: "Vehicle Used",
@@ -124,7 +125,7 @@ const resources = {
           submitting: "Submitting...",
           placeholders: {
             userName: "Enter your full name",
-            purpose: "Why are you going out?",
+            purpose: "Where are you going out?",
             vehicle: "Select a vehicle",
             notes: "Any additional details about your trip...",
             dateFormat: "dd/mm/yyyy"
@@ -159,7 +160,7 @@ const resources = {
     translation: {
       nav: {
         home: "ໜ້າຫຼັກ",
-        report: "ລາຍງານກິດຈະກຳ",
+        report: "ລາຍງານ",
         admin: "ແຜງຄວບຄຸມຜູ້ດູແລລະບົບ"
       },
       common: {
@@ -187,8 +188,9 @@ const resources = {
         rememberMe: "ຈົດຈຳການເຂົ້າສູ່ລະບົບ"
       },
       admin: {
-        dashboard: "ໜ້າຄວບຄຸມຜູ້ເບິ່ງແຍງລະບົບ",
-        filterReports: "ກັ່ນຕອງ ແລະ ຈັດການລາຍງານກິດຈະກຳ",
+        dashboard: "ໜ້າຄວບຄຸມຜູ້ດູແລລະບົບ",
+        reports: "ລາຍງານທັງໝົດ",
+        filterReports: "ກັ່ນຕອງ ແລະ ຈັດການລາຍງານວຽກ",
         noReports: "ບໍ່ພົບລາຍງານ",
         searchPlaceholder: "ຄົ້ນຫາລາຍງານ...",
         clearSearch: "ລ້າງການຄົ້ນຫາ",
@@ -213,43 +215,61 @@ const resources = {
           "toyota-revo-1188": "ໂຕໂຍຕ້າ ຣີໂວ 1188",
           "toyota-vios-1188": "ໂຕໂຍຕ້າ ວີອອສ 1188",
           "toyota-vigo-5609": "ໂຕໂຍຕ້າ ວີໂກ້ 5609"
+        },
+        openInMaps: "ເປີດໃນ Google Maps",
+        analytics: {
+          title: "ການວິເຄາະ",
+          tabs: {
+            summary: "ສະຫຼຸບ",
+            charts: "ແຜນວາດ"
+          },
+          totalReports: "ລາຍງານທັງໝົດ",
+          mostCommonPurpose: "ຈຸດປະສົງທີ່ພົບເລື້ອຍໆ",
+          mostActiveUser: "ຜູ້ໃຊ້ທີ່ມີການເຄື່ອນໄຫວຫຼາຍທີ່ສຸດ",
+          averageTimeOut: "ເວລາສະເລ່ຍອອກວຽກນອກ",
+          timeFormat: "{{hours}} ຊົ່ວໂມງ {{minutes}} ນາທີ",
+          charts: {
+            topPurposes: "ຈຸດປະສົງຫຼັກ",
+            activeUsers: "ສະຖິຕິຜູ້ໃຊ້ທີ່ມີການເຄື່ອນໄຫວ",
+            vehicleUsage: "ສະຖິຕິການນຳໃຊ້ພາຫະນະ"
+          }
         }
       },
       home: {
-        title: "ລະບົບບັນທຶກການອອກພິທີກຂອງຜູ້ດູແລລະບົບ MSIG Sokxay",
-        subtitle: "ຕິດຕາມ ແລະ ຈັດການກິດຈະກຳການອອກພິທີກຢ່າງງ່າຍດາຍ. ອອກແບບສະເພາະສຳລັບພະນັກງານຜູ້ດູແລລະບົບທີ່ເຮັດວຽກຢູ່ພິທີກອົບຫຼັກສູດ.",
+        title: "ລະບົບບັນທຶກການອອກວຽກນອກພະນັກງານ MSIG Sokxay",
+        subtitle: "ຕິດຕາມ ແລະ ຈັດການກິດຈະກຳການອອກວຽກນອກຢ່າງງ່າຍດາຍ. ອອກແບບສະເພາະສຳລັບພະນັກງານແອັດມິນທີ່ໄປວຽກນອກຫ້ອງການ.",
         reportActivity: {
-          title: "ລາຍງານກິດຈະກຳ",
-          description: "ບັນທຶກກິດຈະກຳການອອກພິທີກຂອງທ່ານພ້ອມລາຍລະອຽດເຊັ່ນ ຈຸດປະສົງ, ສະຖານທີ່, ແລະ ຫຼັກຖານຮູບພາບ.",
+          title: "ລາຍງານວຽກງານ",
+          description: "ບັນທຶກການອອກວຽກນອກຂອງທ່ານພ້ອມລາຍລະອຽດເຊັ່ນ ຈຸດປະສົງ, ສະຖານທີ່, ແລະ ຫຼັກຖານຮູບພາບ.",
           button: "ລາຍງານຕອນນີ້"
         },
         adminDashboard: {
           title: "ແຜງຄວບຄຸມຜູ້ດູແລລະບົບ",
-          description: "ຕິດຕາມກິດຈະກຳການອອກພິທີກ, ເບິ່ງລາຍງານ, ແລະ ວິເຄາະຂໍ້ມູນດ້ວຍເຄື່ອງມືການສະແດງຜົນທີ່ມີປະສິດທິພາບ.",
+          description: "ຕິດຕາມການອອກວຽກນອກ, ເບິ່ງລາຍງານ, ແລະ ວິເຄາະຂໍ້ມູນດ້ວຍເຄື່ອງມືການສະແດງຜົນທີ່ມີປະສິດທິພາບ.",
           button: "ເບິ່ງແຜງຄວບຄຸມ"
         }
       },
       report: {
-        title: "ລາຍງານກິດຈະກຳການອອກພິທີກ",
+        title: "ລາຍງານການອອກວຽກນອກ",
         form: {
-          description: "ຕື່ມຂໍ້ມູນລາຍລະອຽດກ່ຽວກັບການເຮັດວຽກຂອງທ່ານຢູ່ພິທີກອົບຫຼັກສູດ",
+          description: "ຕື່ມຂໍ້ມູນລາຍລະອຽດກ່ຽວກັບການເຮັດວຽກຂອງທ່ານຢູ່ນອກຫ້ອງການ",
           userName: "ຊື່ຂອງທ່ານ",
-          purpose: "ຈຸດປະສົງການເດີນທາງ",
+          purpose: "ຈຸດໝາຍຂອງການເດີນທາງ",
           timeOut: "ເວລາເລີ່ມຕົ້ນ",
           timeIn: "ເວລາກັບຄືນ",
           vehicle: "ພາຫະນະທີ່ໃຊ້",
           photo: "ຫຼັກຖານຮູບພາບ",
-          camera: "ກ້ອງຖ່າຍຮູບ",
+          camera: "ຖ່າຍຮູບ",
           uploadImage: "ອັບໂຫຼດຮູບພາບ",
           location: "ສະຖານທີ່ປັດຈຸບັນ",
-          captureCurrentLocation: "ບັນທຶກສະຖານທີ່ປັດຈຸບັນ",
+          captureCurrentLocation: "ບັນທຶກທີ່ຕັ້ງປັດຈຸບັນ",
           notes: "ໝາຍເຫດເສີມ (ທາງເລືອກ)",
           submit: "ສົ່ງລາຍງານ",
           submitting: "ກຳລັງສົ່ງ...",
           placeholders: {
             userName: "ປ້ອນຊື່ເຕັມຂອງທ່ານ",
-            purpose: "ເປັນຫຍັງທ່ານຈຶ່ງອອກພິທີກ?",
-            vehicle: "ເລືອກພາຫະນະ",
+            purpose: "ທ່ານກຳລັງຈະໄປສະຖານທີ່ໃດ?",
+            vehicle: "ເລືອກພາຫະນະທີ່ຈະນຳໃຊ້",
             notes: "ຂໍ້ມູນເສີມເກີດຂຶ້ນກັບການເດີນທາງຂອງທ່ານ...",
             dateFormat: "ວັນທີ/ເດືອນ/ປີ"
           },

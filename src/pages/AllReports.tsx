@@ -8,24 +8,50 @@ import {
   Download, 
   Loader2, 
   RefreshCw,
+  MoreHorizontal,
+  Image as ImageIcon,
+  MapPin,
+  ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import ReportCard from "@/components/ReportCard";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { getReports, ReportData } from "@/utils/firebase";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import Navbar from "@/components/Navbar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Update the Report interface to match ReportData but make id required
-type Report = Required<Pick<ReportData, 'id'>> & Omit<ReportData, 'id'>;
+type Report = Required<Pick<ReportData, 'id'>> & Omit<ReportData, 'id'> & {
+  photoBase64?: string;
+};
 
 const AllReports = () => {
   const { t } = useTranslation();
   const [filteredReports, setFilteredReports] = useState<Report[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const { 
     data: reports = [], 
@@ -124,6 +150,10 @@ const AllReports = () => {
     setSelectedDate(null);
   };
 
+  const getGoogleMapsUrl = (lat: number, lng: number) => {
+    return `https://www.google.com/maps?q=${lat},${lng}`;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -131,8 +161,6 @@ const AllReports = () => {
         <br />
         <br />
         <br />
-        
-        
       </div>
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
@@ -190,15 +218,102 @@ const AllReports = () => {
                 {t('admin.noReports')}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredReports.map((report) => (
-                  <ReportCard key={report.id} report={report} />
-                ))}
+              <div className="relative overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('report.form.photo')}</TableHead>
+                      <TableHead>{t('report.form.userName')}</TableHead>
+                      <TableHead>{t('report.form.purpose')}</TableHead>
+                      <TableHead>{t('report.form.timeOut')}</TableHead>
+                      <TableHead>{t('report.form.timeIn')}</TableHead>
+                      <TableHead>{t('report.form.vehicle')}</TableHead>
+                      <TableHead>{t('report.form.location')}</TableHead>
+                      <TableHead>{t('report.form.notes')}</TableHead>
+                      <TableHead className="w-[100px]">{t('admin.actions')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredReports.map((report) => (
+                      <TableRow key={report.id}>
+                        <TableCell>
+                          {report.photoBase64 ? (
+                            <div 
+                              className="relative w-12 h-12 cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => setSelectedImage(report.photoBase64)}
+                            >
+                              <img
+                                src={report.photoBase64}
+                                alt={`${report.userName}'s photo`}
+                                className="w-full h-full object-cover rounded"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                              <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-medium">{report.userName}</TableCell>
+                        <TableCell>{report.purpose}</TableCell>
+                        <TableCell>{format(new Date(report.timeOut), 'PPp')}</TableCell>
+                        <TableCell>{format(new Date(report.timeIn), 'PPp')}</TableCell>
+                        <TableCell>{report.vehicle}</TableCell>
+                        <TableCell>
+                          {report.location ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <a
+                                    href={getGoogleMapsUrl(report.location.lat, report.location.lng)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1.5 text-primary hover:underline"
+                                  >
+                                    <MapPin className="h-4 w-4" />
+                                    <span>{`${report.location.lat.toFixed(6)}, ${report.location.lng.toFixed(6)}`}</span>
+                                    <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{t('admin.openInMaps')}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+                        <TableCell>{report.notes || '-'}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{t('report.viewPhoto')}</DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full aspect-video">
+            <img
+              src={selectedImage || ''}
+              alt="Report photo"
+              className="w-full h-full object-contain"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
