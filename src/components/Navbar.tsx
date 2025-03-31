@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ClipboardList, LayoutDashboard, LogOut } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,17 +29,9 @@ const Navbar = () => {
   }, [location]);
 
   const navLinks = [
-    { name: "Home", path: "/", icon: null },
-    {
-      name: "Report Activity",
-      path: "/report",
-      icon: <ClipboardList className="w-4 h-4 mr-2" />,
-    },
-    {
-      name: "Admin Dashboard",
-      path: "/admin",
-      icon: <LayoutDashboard className="w-4 h-4 mr-2" />,
-    },
+    { path: "/", label: t('nav.home') },
+    { path: "/report", label: t('nav.report') },
+    { path: "/admin", label: t('nav.admin') },
   ];
 
   return (
@@ -48,42 +43,45 @@ const Navbar = () => {
       }`}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
-          <Link to="/" className="flex items-center space-x-2">
-            <img
-              src="https://i.imgur.com/me9MsE9.png"
-              alt="Logo"
-              className="h-10 w-auto"
-            />
-            {/* <span className="font-bold text-xl bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              AdminAwayLog
-            </span> */}
-          </Link>
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <Link to="/" className="flex items-center">
+              <img
+                src="https://i.imgur.com/me9MsE9.png"
+                alt="Logo"
+                className="h-10 w-auto"
+              />
+            </Link>
+          </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-all duration-200 ${
-                  location.pathname === link.path
-                    ? "bg-primary/10 text-primary"
-                    : "text-foreground/70 hover:text-foreground hover:bg-secondary"
-                }`}
-              >
-                {link.icon}
-                {link.name}
-              </Link>
-            ))}
-          </nav>
+          {/* Desktop Navigation - Centered */}
+          <div className="hidden md:flex flex-1 justify-center">
+            <div className="flex space-x-4">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    location.pathname === link.path
+                      ? "bg-primary/10 text-primary"
+                      : "text-foreground/70 hover:text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          {/* Language Switcher and Mobile Menu Button */}
+          <div className="flex items-center space-x-4">
+            <LanguageSwitcher />
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsOpen(!isOpen)}
+              className="md:hidden"
               aria-label="Toggle menu"
             >
               {isOpen ? (
@@ -98,46 +96,28 @@ const Navbar = () => {
 
       {/* Mobile Navigation */}
       <div
-        className={`fixed inset-0 bg-background/95 backdrop-blur-sm z-50 transition-transform duration-300 ease-in-out transform ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        } md:hidden`}
+        className={`md:hidden fixed inset-0 z-50 transition-transform duration-300 ease-in-out ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
-        <div className="flex flex-col h-full">
-          <div className="flex justify-end p-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(false)}
-              aria-label="Close menu"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-          <nav className="flex flex-col p-8 space-y-4">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
+        <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg p-4">
+          <div className="flex flex-col space-y-4">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
-                className={`px-4 py-3 rounded-lg text-lg font-medium flex items-center ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   location.pathname === link.path
                     ? "bg-primary/10 text-primary"
                     : "text-foreground/70 hover:text-foreground hover:bg-secondary"
                 }`}
+                onClick={() => setIsOpen(false)}
               >
-                {link.icon &&
-                  React.cloneElement(link.icon, { className: "w-5 h-5 mr-3" })}
-                {link.name}
+                {link.label}
               </Link>
             ))}
-            <div className="flex-grow"></div>
-            <Button
-              variant="outline"
-              className="mt-auto flex items-center justify-center gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </Button>
-          </nav>
+          </div>
         </div>
       </div>
     </header>

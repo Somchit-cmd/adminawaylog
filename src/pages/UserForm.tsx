@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
@@ -14,6 +13,7 @@ import LocationPicker from "@/components/LocationPicker";
 import PhotoUpload from "@/components/PhotoUpload";
 import { saveReportWithPhoto, vehicleOptions } from "@/utils/firebase";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTranslation } from "react-i18next";
 
 interface FormValues {
   userName: string;
@@ -26,6 +26,7 @@ interface FormValues {
 
 const UserForm = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -42,39 +43,36 @@ const UserForm = () => {
 
   const onSubmit = async (data: FormValues) => {
     if (!location) {
-      toast.error("Please capture your current location");
+      toast.error(t('report.form.errors.locationRequired'));
       return;
     }
 
     if (!photo) {
-      toast.error("Please take a photo as evidence");
+      toast.error(t('report.form.errors.photoRequired'));
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Save the report to Firebase with the photo and base64 string
       const reportId = await saveReportWithPhoto({
         ...data,
         location,
       }, photo, photoBase64 || undefined);
 
-      toast.success("Report submitted successfully!");
+      toast.success(t('report.form.success'));
       
-      // Reset form after successful submission
       reset();
       setLocation(null);
       setPhoto(null);
       setPhotoBase64(null);
       
-      // Navigate home after submission
       setTimeout(() => {
         navigate("/");
       }, 1500);
     } catch (error) {
       console.error("Error submitting report:", error);
-      toast.error("Failed to submit report. Please try again.");
+      toast.error(t('report.form.error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -89,9 +87,9 @@ const UserForm = () => {
               <ClipboardList className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle>Report Field Activity</CardTitle>
+              <CardTitle>{t('report.title')}</CardTitle>
               <CardDescription>
-                Fill the form with details of your work outside the office
+                {t('report.form.description')}
               </CardDescription>
             </div>
           </div>
@@ -100,12 +98,12 @@ const UserForm = () => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-4">
               <div className="grid gap-3">
-                <Label htmlFor="userName">Your Name</Label>
+                <Label htmlFor="userName">{t('report.form.userName')}</Label>
                 <Input
                   id="userName"
-                  placeholder="Enter your full name"
+                  placeholder={t('report.form.placeholders.userName')}
                   className="form-input"
-                  {...register("userName", { required: "Name is required" })}
+                  {...register("userName", { required: t('report.form.errors.nameRequired') })}
                 />
                 {errors.userName && (
                   <p className="text-sm text-destructive">{errors.userName.message}</p>
@@ -113,12 +111,12 @@ const UserForm = () => {
               </div>
 
               <div className="grid gap-3">
-                <Label htmlFor="purpose">Purpose of Trip</Label>
+                <Label htmlFor="purpose">{t('report.form.purpose')}</Label>
                 <Input
                   id="purpose"
-                  placeholder="Why are you going out?"
+                  placeholder={t('report.form.placeholders.purpose')}
                   className="form-input"
-                  {...register("purpose", { required: "Purpose is required" })}
+                  {...register("purpose", { required: t('report.form.errors.purposeRequired') })}
                 />
                 {errors.purpose && (
                   <p className="text-sm text-destructive">{errors.purpose.message}</p>
@@ -127,12 +125,12 @@ const UserForm = () => {
 
               <div className={isMobile ? "grid gap-4" : "grid grid-cols-2 gap-4"}>
                 <div className="grid gap-3">
-                  <Label htmlFor="timeOut">Start Time</Label>
+                  <Label htmlFor="timeOut">{t('report.form.timeOut')}</Label>
                   <Input
                     id="timeOut"
                     type="datetime-local"
                     className="form-input"
-                    {...register("timeOut", { required: "Start time is required" })}
+                    {...register("timeOut", { required: t('report.form.errors.timeOutRequired') })}
                   />
                   {errors.timeOut && (
                     <p className="text-sm text-destructive">{errors.timeOut.message}</p>
@@ -140,12 +138,12 @@ const UserForm = () => {
                 </div>
 
                 <div className="grid gap-3">
-                  <Label htmlFor="timeIn">Return Time</Label>
+                  <Label htmlFor="timeIn">{t('report.form.timeIn')}</Label>
                   <Input
                     id="timeIn"
                     type="datetime-local"
                     className="form-input"
-                    {...register("timeIn", { required: "Return time is required" })}
+                    {...register("timeIn", { required: t('report.form.errors.timeInRequired') })}
                   />
                   {errors.timeIn && (
                     <p className="text-sm text-destructive">{errors.timeIn.message}</p>
@@ -154,18 +152,18 @@ const UserForm = () => {
               </div>
 
               <div className="grid gap-3">
-                <Label htmlFor="vehicle">Vehicle Used</Label>
+                <Label htmlFor="vehicle">{t('report.form.vehicle')}</Label>
                 <Controller
                   name="vehicle"
                   control={control}
-                  rules={{ required: "Vehicle is required" }}
+                  rules={{ required: t('report.form.errors.vehicleRequired') }}
                   render={({ field }) => (
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <SelectTrigger id="vehicle" className="w-full">
-                        <SelectValue placeholder="Select a vehicle" />
+                        <SelectValue placeholder={t('report.form.placeholders.vehicle')} />
                       </SelectTrigger>
                       <SelectContent>
                         {vehicleOptions.map((vehicle) => (
@@ -183,7 +181,7 @@ const UserForm = () => {
               </div>
 
               <div className="grid gap-3">
-                <Label>Evidence Photo</Label>
+                <Label>{t('report.form.photo')}</Label>
                 <PhotoUpload onPhotoCapture={(file, base64) => {
                   setPhoto(file);
                   setPhotoBase64(base64);
@@ -191,20 +189,20 @@ const UserForm = () => {
               </div>
 
               <div className="grid gap-3">
-                <Label>Current Location</Label>
+                <Label>{t('report.form.location')}</Label>
                 <LocationPicker onLocationSelect={(loc) => setLocation(loc)} />
                 {location && (
                   <p className="text-xs text-muted-foreground">
-                    Captured location: {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
+                    {t('report.form.locationCaptured')}: {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
                   </p>
                 )}
               </div>
 
               <div className="grid gap-3">
-                <Label htmlFor="notes">Additional Notes (Optional)</Label>
+                <Label htmlFor="notes">{t('report.form.notes')}</Label>
                 <Textarea
                   id="notes"
-                  placeholder="Any additional details about your trip..."
+                  placeholder={t('report.form.placeholders.notes')}
                   className="form-input min-h-[100px]"
                   {...register("notes")}
                 />
@@ -219,10 +217,10 @@ const UserForm = () => {
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
+                  {t('report.form.submitting')}
                 </>
               ) : (
-                "Submit Report"
+                t('report.form.submit')
               )}
             </Button>
           </form>
